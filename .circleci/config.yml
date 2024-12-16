@@ -1,0 +1,71 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.1
+
+jobs:
+  lint:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Compile the source
+          command: npm run compile
+      - run:
+          name: Run ESLint checks
+          command: npm run lint
+      - run:
+          name: Run Prettier checks
+          command: npm run format-check
+  test:
+    docker:
+      - image: cimg/openjdk:20.0.2-node
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Compile the source
+          command: npm run compile
+      - run:
+          name: Run tests
+          command: npm run test
+
+  publish:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Configure NPM
+          command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+      - run:
+          name: Compile the source
+          command: rm -rf dist && npm run compile
+      - run:
+          name: Publish to NPM
+          command: npm publish
+
+workflows:
+  build_test_deploy:
+    jobs:
+      - lint:
+          filters:
+            tags:
+              only: /.*/
+
+      - test:
+          filters:
+            tags:
+              only: /.*/
+
+      - publish:
+          requires: [lint, test]
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+$/

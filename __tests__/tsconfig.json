@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "target": "ES6"
+  },
+  "include": [".", "../src/**/__tests__"],
+  "exclude": ["types"]
+}
